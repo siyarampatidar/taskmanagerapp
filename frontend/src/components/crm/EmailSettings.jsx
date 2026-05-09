@@ -12,7 +12,7 @@ const EmailSettings = () => {
     const fetchStatus = async () => {
         try {
             const token = localStorage.getItem('teamflow_token');
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/crm/auth/google/status`, {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'https://taskmanagerapp-backend-kv8n.onrender.com'}/api/crm/auth/google/status`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setStatus({ connected: res.data.connected, email: res.data.email });
@@ -30,7 +30,7 @@ const EmailSettings = () => {
     const handleConnect = async () => {
         try {
             const token = localStorage.getItem('teamflow_token');
-            const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/crm/auth/google/url`, {
+            const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL || 'https://taskmanagerapp-backend-kv8n.onrender.com'}/api/crm/auth/google/url`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             window.location.href = res.data.url;
@@ -46,7 +46,7 @@ const EmailSettings = () => {
     const confirmDisconnect = async () => {
         try {
             const token = localStorage.getItem('teamflow_token');
-            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/crm/auth/google/disconnect`, {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'https://taskmanagerapp-backend-kv8n.onrender.com'}/api/crm/auth/google/disconnect`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setStatus({ connected: false, email: '' });
