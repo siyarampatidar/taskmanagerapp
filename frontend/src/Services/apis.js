@@ -7,7 +7,7 @@ const isLocalhost = Boolean(
 
 export const BACKEND_URL = isLocalhost 
   ? "http://localhost:5000" 
-  : "https://taskmanagementbackend-kivs.onrender.com";
+  : "https://taskmanagerapp-backend-kv8n.onrender.com";
 
 export const BASE_URL = `${BACKEND_URL}/api`;
 
