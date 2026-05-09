@@ -119,7 +119,7 @@ const SelectPlan = () => {
 
     try {
       const token = localStorage.getItem('teamflow_token');
-      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const apiBase = import.meta.env.VITE_API_URL || 'https://taskmanagerapp-backend-kv8n.onrender.com/api';
       const orderRes = await axios.post(`${apiBase}/subscriptions/create-order`, 
         { planId: plan._id },
         { headers: { Authorization: `Bearer ${token}` } }
