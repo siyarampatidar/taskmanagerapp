@@ -19,7 +19,7 @@ const GoogleOAuthCallback = () => {
 
             try {
                 const token = localStorage.getItem('teamflow_token');
-                await axios.post(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/crm/auth/google/callback`, 
+                await axios.post(`${import.meta.env.VITE_BACKEND_URL || 'https://taskmanagerapp-backend-kv8n.onrender.com'}/api/crm/auth/google/callback`, 
                     { code },
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
