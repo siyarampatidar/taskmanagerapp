@@ -17,7 +17,7 @@ const Inbox = () => {
     const [replyText, setReplyText] = useState('');
     const [sendingReply, setSendingReply] = useState(false);
 
-    const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const API_URL = import.meta.env.VITE_BACKEND_URL || 'https://taskmanagerapp-backend-kv8n.onrender.com';
 
     const fetchStatus = async () => {
         try {
