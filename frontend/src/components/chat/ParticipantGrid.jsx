@@ -178,9 +178,29 @@ const ParticipantGrid = ({ callType }) => {
         );
     }
 
+    // FOCUS LAYOUT (Screen Share or Manual Pin)
+    return (
+        <FocusedParticipantContent 
+            activeFocusTrack={activeFocusTrack} 
+            mainAreaRef={mainAreaRef} 
+            isFullscreen={isFullscreen} 
+            focusTrack={focusTrack}
+            setFocusTrack={setFocusTrack}
+            tracks={tracks}
+        />
+    );
+};
+
+const FocusedParticipantContent = ({ 
+    activeFocusTrack, 
+    mainAreaRef, 
+    isFullscreen, 
+    focusTrack, 
+    setFocusTrack, 
+    tracks 
+}) => {
     const { isMuted: focusMuted } = useTrackMutedIndicator(activeFocusTrack);
 
-    // FOCUS LAYOUT (Screen Share or Manual Pin)
     return (
         <div className="w-full h-full flex flex-col md:flex-row bg-black overflow-hidden relative">
             {/* MAIN CONTENT AREA */}
