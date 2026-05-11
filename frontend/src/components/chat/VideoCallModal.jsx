@@ -54,10 +54,10 @@ const VideoCallModal = ({ call, token, url, onLeave }) => {
         animate={{
           opacity: 1,
           width: isMinimized ? '300px' : '100vw',
-          height: isMinimized ? '170px' : '100vh',
+          height: isMinimized ? '170px' : '100dvh',
           bottom: isMinimized ? '20px' : '0',
           right: isMinimized ? '20px' : '0',
-          borderRadius: isMinimized ? '20px' : '0',
+          borderRadius: isMinimized ? '24px' : '0',
           top: isMinimized ? 'auto' : '0',
           left: isMinimized ? 'auto' : '0',
         }}
@@ -67,7 +67,7 @@ const VideoCallModal = ({ call, token, url, onLeave }) => {
           margin: 0,
           padding: 0,
           maxWidth: '100vw',
-          maxHeight: '100vh',
+          maxHeight: '100dvh',
           boxSizing: 'border-box'
         }}
         className="bg-black flex flex-col overflow-hidden shadow-2xl"
@@ -148,8 +148,8 @@ const VideoCallModal = ({ call, token, url, onLeave }) => {
 
           {/* Footer Area */}
           {!isMinimized && (
-            <div className="h-28 md:h-36 flex-shrink-0 flex items-center justify-center bg-gradient-to-t from-black/90 to-transparent absolute bottom-0 left-0 right-0 z-30 pointer-events-none">
-              <div className="pointer-events-auto transform translate-y-[-10px] md:translate-y-[-20px]">
+            <div className="h-40 md:h-48 flex-shrink-0 flex items-end justify-center bg-gradient-to-t from-black/95 via-black/50 to-transparent fixed bottom-0 left-0 right-0 z-[10000] pointer-events-none pb-14 md:pb-16">
+              <div className="pointer-events-auto">
                 <RoomContent onLeave={onLeave} callType={call.type} />
               </div>
             </div>
