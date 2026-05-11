@@ -8,7 +8,26 @@ import {
     FocusLayout
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
-import { X, Pin, User, Mic, MicOff, Maximize, Minimize } from 'lucide-react';
+import { X, Pin, User, Mic, MicOff, Maximize, Minimize, VideoOff } from 'lucide-react';
+
+const CameraOffPlaceholder = ({ name, identity, size = "md" }) => (
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90 backdrop-blur-md gap-4 z-0">
+        <div className={`rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center shadow-2xl ${
+            size === "lg" ? 'w-32 h-32' : 'w-16 h-16 md:w-20 md:h-20'
+        }`}>
+            <User className={`${size === "lg" ? 'w-16 h-16' : 'w-8 h-8 md:w-10 md:h-10'} text-white/20`} />
+        </div>
+        <div className="flex flex-col items-center px-4 text-center">
+            <div className="flex items-center gap-2 mb-1">
+                <VideoOff className="w-3 h-3 text-rose-500" />
+                <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Camera Off</span>
+            </div>
+            <span className={`text-white font-bold truncate max-w-[150px] ${size === "lg" ? 'text-lg' : 'text-xs'}`}>
+                {name || identity}
+            </span>
+        </div>
+    </div>
+);
 
 const ParticipantCard = ({ track, isFocused = false, onFocus, className = "", isPip = false, fit = "cover" }) => {
     const participant = track.participant;
@@ -25,11 +44,14 @@ const ParticipantCard = ({ track, isFocused = false, onFocus, className = "", is
                 isSpeaking ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]' : 'border-white/10'
             } bg-zinc-900/50 ${onFocus ? 'cursor-pointer hover:border-white/30' : ''} ${className}`}
         >
-            <div className="pointer-events-none w-full h-full">
+            <div className="pointer-events-none w-full h-full relative">
                 <VideoTrack 
                     trackRef={track} 
-                    className={`${fit === 'cover' ? 'object-cover' : 'object-contain'} w-full h-full`}
+                    className={`${fit === 'cover' ? 'object-cover' : 'object-contain'} w-full h-full ${isMuted ? 'opacity-0' : 'opacity-100'}`}
                 />
+                {isMuted && track.source === Track.Source.Camera && (
+                    <CameraOffPlaceholder name={name} identity={identity} />
+                )}
             </div>
             
             {/* Status Bar - Smaller for PIP */}
@@ -156,6 +178,8 @@ const ParticipantGrid = ({ callType }) => {
         );
     }
 
+    const { isMuted: focusMuted } = useTrackMutedIndicator(activeFocusTrack);
+
     // FOCUS LAYOUT (Screen Share or Manual Pin)
     return (
         <div className="w-full h-full flex flex-col md:flex-row bg-black overflow-hidden relative">
@@ -167,11 +191,20 @@ const ParticipantGrid = ({ callType }) => {
                 }`}
             >
                 <FocusLayout trackRef={activeFocusTrack}>
-                    <VideoTrack
-                        trackRef={activeFocusTrack}
-                        style={{ objectFit: 'contain' }}
-                        className="w-full h-full"
-                    />
+                    <div className="w-full h-full relative">
+                        <VideoTrack
+                            trackRef={activeFocusTrack}
+                            style={{ objectFit: 'contain' }}
+                            className={`w-full h-full ${focusMuted && activeFocusTrack.source === Track.Source.Camera ? 'opacity-0' : 'opacity-100'}`}
+                        />
+                        {focusMuted && activeFocusTrack.source === Track.Source.Camera && (
+                            <CameraOffPlaceholder 
+                                name={activeFocusTrack.participant.name} 
+                                identity={activeFocusTrack.participant.identity}
+                                size="lg"
+                            />
+                        )}
+                    </div>
                 </FocusLayout>
 
                 {/* Overlay Label for Focus */}
