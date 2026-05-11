@@ -4,14 +4,17 @@ import {
     useTracks,
     useParticipants,
     useParticipantInfo,
+    useTrackMutedIndicator,
     FocusLayout,
     GridLayout
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
-import { X, Pin, User, Mic, MicOff } from 'lucide-react';
+import { X, Pin, User, Mic, MicOff, Maximize, Minimize } from 'lucide-react';
 
-const ParticipantCard = ({ track, isFocused = false, onFocus, className = "" }) => {
-    const { identity, name, isSpeaking, isMicrophoneEnabled } = useParticipantInfo({ participant: track.participant });
+const ParticipantCard = ({ track, isFocused = false, onFocus, className = "", isPip = false }) => {
+    const participant = track.participant;
+    const { identity, name, isSpeaking } = useParticipantInfo({ participant });
+    const { isMuted } = useTrackMutedIndicator(track);
     
     return (
         <div 
@@ -22,17 +25,17 @@ const ParticipantCard = ({ track, isFocused = false, onFocus, className = "" }) 
         >
             <ParticipantTile trackRef={track} className="object-cover w-full h-full" />
             
-            {/* Status Bar */}
-            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+            {/* Status Bar - Smaller for PIP */}
+            <div className={`absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none translate-y-1 group-hover:translate-y-0 transition-transform duration-300 ${isPip ? 'scale-75 origin-bottom-left' : ''}`}>
                 <div className="bg-black/60 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 shadow-xl">
                     <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${isSpeaking ? 'bg-emerald-500 animate-pulse' : 'bg-white/20'}`} />
                     <span className="text-white text-[10px] md:text-xs font-semibold tracking-wide">
-                        {name || identity} {track.participant.identity === 'local' ? '(You)' : ''}
+                        {name || identity} {participant.identity === 'local' ? '(You)' : ''}
                     </span>
-                    {!isMicrophoneEnabled && (
+                    {isMuted && (
                         <div className="w-px h-3 bg-white/20 mx-0.5" />
                     )}
-                    {!isMicrophoneEnabled && (
+                    {isMuted && (
                         <MicOff className="w-3 h-3 text-rose-500" />
                     )}
                 </div>
@@ -85,7 +88,36 @@ const ParticipantGrid = ({ callType }) => {
 
     const activeFocusTrack = focusTrack || screenShareTrack;
 
-    // Default Grid (1-4 participants usually looks best in a clean grid)
+    // 1v1 PIP LAYOUT (2 participants: you and one other)
+    if (!activeFocusTrack && tracks.length === 2) {
+        const localTrack = tracks.find(t => t.participant.identity === 'local' || t.participant.isLocal);
+        const remoteTrack = tracks.find(t => t !== localTrack);
+
+        if (localTrack && remoteTrack) {
+            return (
+                <div className="w-full h-full relative bg-black overflow-hidden">
+                    {/* REMOTE PARTICIPANT (Full Screen) */}
+                    <div className="absolute inset-0">
+                        <ParticipantCard 
+                            track={remoteTrack} 
+                            className="w-full h-full rounded-none border-none"
+                        />
+                    </div>
+
+                    {/* LOCAL PARTICIPANT (Floating PIP) */}
+                    <div className="absolute bottom-6 right-6 w-32 h-48 md:w-48 md:h-64 z-20 shadow-2xl transition-all duration-500 hover:scale-105">
+                        <ParticipantCard 
+                            track={localTrack} 
+                            className="w-full h-full shadow-2xl ring-1 ring-white/10"
+                            isPip={true}
+                        />
+                    </div>
+                </div>
+            );
+        }
+    }
+
+    // Default Grid (1 or 3+ participants)
     if (!activeFocusTrack) {
         return (
             <div className="w-full h-full bg-black p-4 md:p-6">
@@ -122,19 +154,48 @@ const ParticipantGrid = ({ callType }) => {
                     {/* Overlay Label for Focus */}
                     <div className="absolute top-6 left-6 flex items-center gap-3 bg-black/60 backdrop-blur-2xl px-4 py-2 rounded-2xl border border-white/10 z-10 shadow-2xl">
                         <div className={`w-2 h-2 rounded-full ${activeFocusTrack.source === Track.Source.ScreenShare ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`} />
-                        <span className="text-white text-[11px] md:text-sm font-bold tracking-wide">
-                            {activeFocusTrack.source === Track.Source.ScreenShare ? 'Presenting Screen' : (activeFocusTrack.participant.name || activeFocusTrack.participant.identity)}
-                        </span>
+                        <div className="flex flex-col">
+                            <span className="text-white text-[11px] md:text-sm font-bold tracking-wide">
+                                {activeFocusTrack.source === Track.Source.ScreenShare ? 'Presenting Screen' : (activeFocusTrack.participant.name || activeFocusTrack.participant.identity)}
+                            </span>
+                            {activeFocusTrack.source === Track.Source.ScreenShare && (
+                                <span className="text-white/40 text-[8px] md:text-[9px] uppercase font-black tracking-widest mt-0.5">High Quality Stream</span>
+                            )}
+                        </div>
                     </div>
 
-                    {focusTrack && (
+                    <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
+                        {activeFocusTrack.source === Track.Source.ScreenShare && activeFocusTrack.participant.identity === 'local' && (
+                            <button
+                                onClick={() => activeFocusTrack.participant.setScreenShareEnabled(false)}
+                                className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-2xl transition-all duration-300 shadow-xl flex items-center gap-2 text-xs font-bold"
+                            >
+                                <X className="w-4 h-4" />
+                                Stop Sharing
+                            </button>
+                        )}
+                        
                         <button
-                            onClick={() => setFocusTrack(null)}
-                            className="absolute top-6 right-6 bg-white/10 hover:bg-rose-500 text-white p-2.5 rounded-2xl transition-all duration-300 border border-white/10 z-10 shadow-xl group"
+                            onClick={() => {
+                                const el = document.querySelector('.lk-focus-layout video');
+                                if (el) el.requestFullscreen();
+                            }}
+                            className="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-2xl transition-all duration-300 border border-white/10 shadow-xl group"
+                            title="Maximize Stream"
                         >
-                            <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <Maximize className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         </button>
-                    )}
+
+                        {focusTrack && (
+                            <button
+                                onClick={() => setFocusTrack(null)}
+                                className="bg-white/10 hover:bg-rose-500 text-white p-2.5 rounded-2xl transition-all duration-300 border border-white/10 shadow-xl group"
+                                title="Unpin"
+                            >
+                                <Pin className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* SIDEBAR */}

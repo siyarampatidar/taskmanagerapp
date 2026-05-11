@@ -130,9 +130,18 @@ const VideoCallModal = ({ call, token, url, onLeave }) => {
                 <ParticipantGrid callType={call.type} />
               </div>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-zinc-900/50 backdrop-blur-2xl border border-white/10 rounded-2xl m-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-white text-[8px] font-black uppercase tracking-widest opacity-60">Call Active</p>
+              <div 
+                onClick={() => setIsMinimized(false)}
+                className="w-full h-full flex flex-col items-center justify-center gap-3 bg-zinc-900/80 backdrop-blur-2xl border border-white/10 rounded-2xl m-0 cursor-pointer hover:bg-zinc-800/90 transition-all group relative overflow-hidden"
+              >
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Maximize2 className="w-3 h-3 text-white/70" />
+                </div>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                <div className="flex flex-col items-center gap-1">
+                  <p className="text-white text-[8px] font-black uppercase tracking-widest opacity-60">Call Active</p>
+                  <span className="text-white/40 text-[6px] font-bold uppercase tracking-tighter">Click to expand</span>
+                </div>
               </div>
             )}
           </div>
