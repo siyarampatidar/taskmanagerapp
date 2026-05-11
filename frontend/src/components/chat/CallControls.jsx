@@ -37,13 +37,15 @@ const CallControls = ({
         </button>
       )}
 
-      <button 
-        onClick={onToggleScreenShare}
-        title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
-        className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all ${isScreenSharing ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white hover:bg-white/10'}`}
-      >
-        <ScreenShare className="w-4 h-4 md:w-5 md:h-5" />
-      </button>
+      {onToggleScreenShare && (
+        <button 
+          onClick={onToggleScreenShare}
+          title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
+          className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all ${isScreenSharing ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white hover:bg-white/10'}`}
+        >
+          <ScreenShare className="w-4 h-4 md:w-5 md:h-5" />
+        </button>
+      )}
 
       <div className="w-px h-6 bg-white/10 mx-1" />
 
