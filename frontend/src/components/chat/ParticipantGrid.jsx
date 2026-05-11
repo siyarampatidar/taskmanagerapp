@@ -10,7 +10,7 @@ import {
 import { Track } from 'livekit-client';
 import { X, Pin, User, Mic, MicOff, Maximize, Minimize } from 'lucide-react';
 
-const ParticipantCard = ({ track, isFocused = false, onFocus, className = "", isPip = false }) => {
+const ParticipantCard = ({ track, isFocused = false, onFocus, className = "", isPip = false, fit = "cover" }) => {
     const participant = track.participant;
     const { identity, name, isSpeaking } = useParticipantInfo({ participant });
     const { isMuted } = useTrackMutedIndicator(track);
@@ -28,7 +28,7 @@ const ParticipantCard = ({ track, isFocused = false, onFocus, className = "", is
             <div className="pointer-events-none w-full h-full">
                 <VideoTrack 
                     trackRef={track} 
-                    className="object-cover w-full h-full"
+                    className={`${fit === 'cover' ? 'object-cover' : 'object-contain'} w-full h-full`}
                 />
             </div>
             
@@ -118,6 +118,7 @@ const ParticipantGrid = ({ callType }) => {
                         <ParticipantCard 
                             track={remoteTrack} 
                             className="w-full h-full rounded-none border-none"
+                            fit="contain"
                         />
                     </div>
 
@@ -168,7 +169,7 @@ const ParticipantGrid = ({ callType }) => {
                 <FocusLayout trackRef={activeFocusTrack}>
                     <VideoTrack
                         trackRef={activeFocusTrack}
-                        style={{ objectFit: activeFocusTrack.source === Track.Source.ScreenShare ? 'contain' : 'cover' }}
+                        style={{ objectFit: 'contain' }}
                         className="w-full h-full"
                     />
                 </FocusLayout>
