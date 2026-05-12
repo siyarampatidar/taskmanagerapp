@@ -3,7 +3,6 @@ import {
   LiveKitRoom,
   RoomAudioRenderer,
   useLocalParticipant,
-  useMediaDeviceSelect,
 } from '@livekit/components-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Maximize2, Minimize2, Maximize } from 'lucide-react';
@@ -172,27 +171,6 @@ const RoomContent = ({ onLeave, callType }) => {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
   }, []);
 
-  // Use LiveKit's built-in device selection hook
-  const { devices, activeDeviceId, setActiveDeviceId } = useMediaDeviceSelect({ kind: 'videoinput' });
-
-  const handleSwitchCamera = async () => {
-    try {
-      if (devices.length > 1) {
-        // Find the next device in the list
-        const currentIndex = devices.findIndex(d => d.deviceId === activeDeviceId);
-        const nextDevice = devices[(currentIndex + 1) % devices.length];
-        if (nextDevice) {
-          await setActiveDeviceId(nextDevice.deviceId);
-        }
-      } else if (localParticipant.switchCamera) {
-        // Fallback for mobile devices that might only report one "virtual" camera
-        await localParticipant.switchCamera();
-      }
-    } catch (error) {
-      console.error("Camera switch error:", error);
-    }
-  };
-
   const handleToggleScreenShare = async () => {
     try {
       if (!isScreenShareEnabled) {
@@ -213,7 +191,6 @@ const RoomContent = ({ onLeave, callType }) => {
       isScreenShareSupported={isScreenShareSupported}
       onToggleMic={() => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
       onToggleCamera={callType === 'video' ? () => localParticipant.setCameraEnabled(!isCameraEnabled) : null}
-      onSwitchCamera={callType === 'video' ? handleSwitchCamera : null}
       onToggleScreenShare={callType === 'video' ? handleToggleScreenShare : null}
       onDisconnect={onLeave}
     />
