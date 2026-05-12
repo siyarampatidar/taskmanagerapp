@@ -3,6 +3,7 @@ import {
   LiveKitRoom,
   RoomAudioRenderer,
   useLocalParticipant,
+  useMediaDeviceSelect,
 } from '@livekit/components-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Maximize2, Minimize2, Maximize } from 'lucide-react';
@@ -164,6 +165,17 @@ const VideoCallModal = ({ call, token, url, onLeave }) => {
 
 const RoomContent = ({ onLeave, callType }) => {
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
+  const { devices, activeDeviceId, setActiveDeviceId } = useMediaDeviceSelect({ kind: 'videoinput' });
+
+  const handleSwitchCamera = async () => {
+    if (devices.length <= 1) return;
+    const currentIndex = devices.findIndex(d => d.deviceId === activeDeviceId);
+    const nextIndex = (currentIndex + 1) % devices.length;
+    const nextDevice = devices[nextIndex];
+    if (nextDevice) {
+      await setActiveDeviceId(nextDevice.deviceId);
+    }
+  };
 
   return (
     <CallControls
@@ -172,6 +184,7 @@ const RoomContent = ({ onLeave, callType }) => {
       isScreenSharing={isScreenShareEnabled}
       onToggleMic={() => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
       onToggleCamera={callType === 'video' ? () => localParticipant.setCameraEnabled(!isCameraEnabled) : null}
+      onSwitchCamera={callType === 'video' && devices.length > 1 ? handleSwitchCamera : null}
       onToggleScreenShare={callType === 'video' ? () => localParticipant.setScreenShareEnabled(!isScreenShareEnabled) : null}
       onDisconnect={onLeave}
     />
