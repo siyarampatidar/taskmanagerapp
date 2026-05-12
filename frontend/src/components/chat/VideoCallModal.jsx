@@ -166,69 +166,30 @@ const VideoCallModal = ({ call, token, url, onLeave }) => {
 
 const RoomContent = ({ onLeave, callType }) => {
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
-  const [facingMode, setFacingMode] = useState('user');
-
+  
   // Check if screen share is supported by the browser
   const isScreenShareSupported = useMemo(() => {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
   }, []);
 
+  // Use LiveKit's built-in device selection hook
+  const { devices, activeDeviceId, setActiveDeviceId } = useMediaDeviceSelect({ kind: 'videoinput' });
+
   const handleSwitchCamera = async () => {
     try {
-      // 1. Get all available video devices
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(d => d.kind === 'videoinput' && d.deviceId);
-      
-      if (videoDevices.length <= 1) {
-        // If only one device reported, try toggling facingMode as a fallback
-        const nextMode = facingMode === 'user' ? 'environment' : 'user';
-        setFacingMode(nextMode);
-        await localParticipant.setCameraEnabled(false);
-        await localParticipant.setCameraEnabled(true, {
-          videoConstraints: { facingMode: nextMode }
-        });
-        return;
-      }
-
-      // 2. Identify the current active device
-      const currentTrack = localParticipant.getTrack(Track.Source.Camera);
-      const currentDeviceId = currentTrack?.videoTrack?.mediaStreamTrack.getSettings().deviceId;
-      
-      // 3. Find the next device in the list
-      let currentIndex = videoDevices.findIndex(d => d.deviceId === currentDeviceId);
-      // If current device not found in list (common on some browsers), default to 0
-      if (currentIndex === -1) currentIndex = 0;
-      
-      const nextIndex = (currentIndex + 1) % videoDevices.length;
-      const nextDevice = videoDevices[nextIndex];
-
-      if (nextDevice) {
-        // 4. Switch to the next device
-        await localParticipant.setCameraEnabled(false);
-        // Small delay to ensure the hardware is released
-        await new Promise(resolve => setTimeout(resolve, 100));
-        await localParticipant.setCameraEnabled(true, {
-          deviceId: nextDevice.deviceId
-        });
-        
-        // 5. Update facingMode state for future toggles
-        const label = nextDevice.label.toLowerCase();
-        if (label.includes('back') || label.includes('environment') || label.includes('rear')) {
-          setFacingMode('environment');
-        } else {
-          setFacingMode('user');
+      if (devices.length > 1) {
+        // Find the next device in the list
+        const currentIndex = devices.findIndex(d => d.deviceId === activeDeviceId);
+        const nextDevice = devices[(currentIndex + 1) % devices.length];
+        if (nextDevice) {
+          await setActiveDeviceId(nextDevice.deviceId);
         }
+      } else if (localParticipant.switchCamera) {
+        // Fallback for mobile devices that might only report one "virtual" camera
+        await localParticipant.switchCamera();
       }
     } catch (error) {
       console.error("Camera switch error:", error);
-      // Final fallback to LiveKit built-in method
-      if (localParticipant.switchCamera) {
-        try {
-          await localParticipant.switchCamera();
-        } catch (e) {
-          console.error("LiveKit switchCamera failed:", e);
-        }
-      }
     }
   };
 
