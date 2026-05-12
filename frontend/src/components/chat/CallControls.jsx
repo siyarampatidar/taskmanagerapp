@@ -6,6 +6,7 @@ import {
   VideoOff, 
   ScreenShare, 
   PhoneOff,
+  RefreshCw
 } from 'lucide-react';
 
 const CallControls = ({ 
@@ -14,6 +15,7 @@ const CallControls = ({
   isScreenSharing, 
   onToggleMic, 
   onToggleCamera, 
+  onSwitchCamera,
   onToggleScreenShare, 
   onDisconnect 
 }) => {
@@ -34,6 +36,16 @@ const CallControls = ({
           className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all ${isCameraOff ? 'bg-rose-500 text-white' : 'bg-white/5 text-white hover:bg-white/10'}`}
         >
           {isCameraOff ? <VideoOff className="w-4 h-4 md:w-5 md:h-5" /> : <VideoIcon className="w-4 h-4 md:w-5 md:h-5" />}
+        </button>
+      )}
+
+      {!isCameraOff && onSwitchCamera && (
+        <button 
+          onClick={onSwitchCamera}
+          title="Switch Camera"
+          className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all bg-white/5 text-white hover:bg-white/10"
+        >
+          <RefreshCw className="w-4 h-4 md:w-5 md:h-5" />
         </button>
       )}
 
