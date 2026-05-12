@@ -7,6 +7,7 @@ import {
 } from '@livekit/components-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Maximize2, Minimize2, Maximize } from 'lucide-react';
+import { Track } from 'livekit-client';
 import CallControls from './CallControls';
 import ParticipantGrid from './ParticipantGrid';
 
@@ -165,15 +166,61 @@ const VideoCallModal = ({ call, token, url, onLeave }) => {
 
 const RoomContent = ({ onLeave, callType }) => {
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
-  const { devices, activeDeviceId, setActiveDeviceId } = useMediaDeviceSelect({ kind: 'videoinput' });
+  
+  // Check if screen share is supported by the browser
+  const isScreenShareSupported = useMemo(() => {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  }, []);
+
+  // Keep useMediaDeviceSelect to check if multiple cameras exist
+  const { devices } = useMediaDeviceSelect({ kind: 'videoinput' });
 
   const handleSwitchCamera = async () => {
-    if (devices.length <= 1) return;
-    const currentIndex = devices.findIndex(d => d.deviceId === activeDeviceId);
-    const nextIndex = (currentIndex + 1) % devices.length;
-    const nextDevice = devices[nextIndex];
-    if (nextDevice) {
-      await setActiveDeviceId(nextDevice.deviceId);
+    try {
+      if (localParticipant.switchCamera) {
+        await localParticipant.switchCamera();
+      } else {
+        const videoDevices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = videoDevices.filter(device => device.kind === 'videoinput');
+        if (cameras.length > 1) {
+          const currentTrack = localParticipant.getTrack(Track.Source.Camera);
+          const currentDeviceId = currentTrack?.mediaStreamTrack.getSettings().deviceId;
+          const currentIndex = cameras.findIndex(c => c.deviceId === currentDeviceId);
+          const nextIndex = (currentIndex + 1) % cameras.length;
+          await localParticipant.setCameraEnabled(true, { deviceId: cameras[nextIndex].deviceId });
+        }
+      }
+    } catch (error) {
+      console.error("Error switching camera:", error);
+    }
+  };
+
+  const handleToggleScreenShare = async () => {
+    try {
+      // On mobile, screen share constraints can sometimes be picky
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      if (!isScreenShareEnabled) {
+        // Options for enabling
+        const options = isMobile ? {
+          video: {
+            displaySurface: 'monitor',
+            logicalSurface: true,
+            cursor: 'always'
+          },
+          audio: false // Audio sharing is often problematic on mobile
+        } : undefined;
+        
+        await localParticipant.setScreenShareEnabled(true, options);
+      } else {
+        await localParticipant.setScreenShareEnabled(false);
+      }
+    } catch (error) {
+      console.error("Screen share error:", error);
+      // If it fails on mobile, it's often due to browser restrictions or user cancellation
+      if (error.name === 'NotAllowedError') {
+        console.warn("Screen share permission denied by user");
+      }
     }
   };
 
@@ -184,8 +231,8 @@ const RoomContent = ({ onLeave, callType }) => {
       isScreenSharing={isScreenShareEnabled}
       onToggleMic={() => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
       onToggleCamera={callType === 'video' ? () => localParticipant.setCameraEnabled(!isCameraEnabled) : null}
-      onSwitchCamera={callType === 'video' && devices.length > 1 ? handleSwitchCamera : null}
-      onToggleScreenShare={callType === 'video' ? () => localParticipant.setScreenShareEnabled(!isScreenShareEnabled) : null}
+      onSwitchCamera={callType === 'video' ? handleSwitchCamera : null}
+      onToggleScreenShare={callType === 'video' && isScreenShareSupported ? handleToggleScreenShare : null}
       onDisconnect={onLeave}
     />
   );
