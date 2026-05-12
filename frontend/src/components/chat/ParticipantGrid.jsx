@@ -228,26 +228,26 @@ const FocusedParticipantContent = ({
                 </FocusLayout>
 
                 {/* Overlay Label for Focus */}
-                <div className="absolute top-6 left-6 flex items-center gap-3 bg-black/60 backdrop-blur-2xl px-4 py-2 rounded-2xl border border-white/10 z-10 shadow-2xl">
-                    <div className={`w-2 h-2 rounded-full ${activeFocusTrack.source === Track.Source.ScreenShare ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`} />
+                <div className="absolute top-4 left-4 md:top-6 md:left-6 flex items-center gap-2 md:gap-3 bg-zinc-950/40 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl border border-white/5 z-10 shadow-lg">
+                    <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${activeFocusTrack.source === Track.Source.ScreenShare ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`} />
                     <div className="flex flex-col">
-                        <span className="text-white text-[11px] md:text-sm font-bold tracking-wide">
-                            {activeFocusTrack.source === Track.Source.ScreenShare ? 'Presenting Screen' : (activeFocusTrack.participant.name || activeFocusTrack.participant.identity)}
+                        <span className="text-white text-[10px] md:text-sm font-bold tracking-wide">
+                            {activeFocusTrack.source === Track.Source.ScreenShare ? 'Presenting' : (activeFocusTrack.participant.name || activeFocusTrack.participant.identity)}
                         </span>
-                        {activeFocusTrack.source === Track.Source.ScreenShare && (
-                            <span className="text-white/40 text-[8px] md:text-[9px] uppercase font-black tracking-widest mt-0.5">High Quality Stream</span>
+                        {activeFocusTrack.source === Track.Source.ScreenShare && !isFullscreen && (
+                            <span className="text-white/40 text-[7px] md:text-[9px] uppercase font-black tracking-widest mt-0.5">High Quality Stream</span>
                         )}
                     </div>
                 </div>
 
-                <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
+                <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 z-10">
                     {activeFocusTrack.source === Track.Source.ScreenShare && activeFocusTrack.participant.identity === 'local' && (
                         <button
                             onClick={() => activeFocusTrack.participant.setScreenShareEnabled(false)}
-                            className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-2xl transition-all duration-300 shadow-xl flex items-center gap-2 text-xs font-bold"
+                            className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl transition-all duration-300 shadow-xl flex items-center gap-2 text-[10px] md:text-xs font-bold"
                         >
-                            <X className="w-4 h-4" />
-                            Stop Sharing
+                            <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            Stop
                         </button>
                     )}
                     
@@ -265,23 +265,23 @@ const FocusedParticipantContent = ({
                                 document.exitFullscreen();
                             }
                         }}
-                        className="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-2xl transition-all duration-300 border border-white/10 shadow-xl group"
+                        className="bg-zinc-950/40 hover:bg-zinc-950/60 text-white p-2 md:p-2.5 rounded-xl md:rounded-2xl transition-all duration-300 border border-white/5 shadow-lg group"
                         title={isFullscreen ? "Exit Fullscreen" : "Maximize Stream"}
                     >
                         {isFullscreen ? (
-                            <Minimize className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <Minimize className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
                         ) : (
-                            <Maximize className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <Maximize className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
                         )}
                     </button>
 
                     {focusTrack && (
                         <button
                             onClick={() => setFocusTrack(null)}
-                            className="bg-white/10 hover:bg-rose-500 text-white p-2.5 rounded-2xl transition-all duration-300 border border-white/10 shadow-xl group"
+                            className="bg-zinc-950/40 hover:bg-rose-500/80 text-white p-2 md:p-2.5 rounded-xl md:rounded-2xl transition-all duration-300 border border-white/5 shadow-lg group"
                             title="Unpin"
                         >
-                            <Pin className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+                            <Pin className="w-4 h-4 md:w-5 md:h-5 group-hover:rotate-45 transition-transform" />
                         </button>
                     )}
                 </div>
