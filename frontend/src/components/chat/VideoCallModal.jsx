@@ -175,25 +175,59 @@ const RoomContent = ({ onLeave, callType }) => {
 
   const handleSwitchCamera = async () => {
     try {
-      // Toggle between 'user' (front) and 'environment' (back)
-      const nextMode = facingMode === 'user' ? 'environment' : 'user';
-      setFacingMode(nextMode);
+      // 1. Get all available video devices
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(d => d.kind === 'videoinput' && d.deviceId);
       
-      // We first disable then enable with new constraints to ensure a clean switch on mobile
-      await localParticipant.setCameraEnabled(false);
-      await localParticipant.setCameraEnabled(true, {
-        videoConstraints: { 
-          facingMode: nextMode,
-          // Adding some standard mobile constraints
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+      if (videoDevices.length <= 1) {
+        // If only one device reported, try toggling facingMode as a fallback
+        const nextMode = facingMode === 'user' ? 'environment' : 'user';
+        setFacingMode(nextMode);
+        await localParticipant.setCameraEnabled(false);
+        await localParticipant.setCameraEnabled(true, {
+          videoConstraints: { facingMode: nextMode }
+        });
+        return;
+      }
+
+      // 2. Identify the current active device
+      const currentTrack = localParticipant.getTrack(Track.Source.Camera);
+      const currentDeviceId = currentTrack?.videoTrack?.mediaStreamTrack.getSettings().deviceId;
+      
+      // 3. Find the next device in the list
+      let currentIndex = videoDevices.findIndex(d => d.deviceId === currentDeviceId);
+      // If current device not found in list (common on some browsers), default to 0
+      if (currentIndex === -1) currentIndex = 0;
+      
+      const nextIndex = (currentIndex + 1) % videoDevices.length;
+      const nextDevice = videoDevices[nextIndex];
+
+      if (nextDevice) {
+        // 4. Switch to the next device
+        await localParticipant.setCameraEnabled(false);
+        // Small delay to ensure the hardware is released
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await localParticipant.setCameraEnabled(true, {
+          deviceId: nextDevice.deviceId
+        });
+        
+        // 5. Update facingMode state for future toggles
+        const label = nextDevice.label.toLowerCase();
+        if (label.includes('back') || label.includes('environment') || label.includes('rear')) {
+          setFacingMode('environment');
+        } else {
+          setFacingMode('user');
         }
-      });
+      }
     } catch (error) {
       console.error("Camera switch error:", error);
-      // Fallback: try switchCamera if available
+      // Final fallback to LiveKit built-in method
       if (localParticipant.switchCamera) {
-        await localParticipant.switchCamera();
+        try {
+          await localParticipant.switchCamera();
+        } catch (e) {
+          console.error("LiveKit switchCamera failed:", e);
+        }
       }
     }
   };
