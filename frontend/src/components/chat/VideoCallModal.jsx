@@ -166,61 +166,47 @@ const VideoCallModal = ({ call, token, url, onLeave }) => {
 
 const RoomContent = ({ onLeave, callType }) => {
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
-  
+  const [facingMode, setFacingMode] = useState('user');
+
   // Check if screen share is supported by the browser
   const isScreenShareSupported = useMemo(() => {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
   }, []);
 
-  // Keep useMediaDeviceSelect to check if multiple cameras exist
-  const { devices } = useMediaDeviceSelect({ kind: 'videoinput' });
-
   const handleSwitchCamera = async () => {
     try {
+      // Toggle between 'user' (front) and 'environment' (back)
+      const nextMode = facingMode === 'user' ? 'environment' : 'user';
+      setFacingMode(nextMode);
+      
+      // We first disable then enable with new constraints to ensure a clean switch on mobile
+      await localParticipant.setCameraEnabled(false);
+      await localParticipant.setCameraEnabled(true, {
+        videoConstraints: { 
+          facingMode: nextMode,
+          // Adding some standard mobile constraints
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+    } catch (error) {
+      console.error("Camera switch error:", error);
+      // Fallback: try switchCamera if available
       if (localParticipant.switchCamera) {
         await localParticipant.switchCamera();
-      } else {
-        const videoDevices = await navigator.mediaDevices.enumerateDevices();
-        const cameras = videoDevices.filter(device => device.kind === 'videoinput');
-        if (cameras.length > 1) {
-          const currentTrack = localParticipant.getTrack(Track.Source.Camera);
-          const currentDeviceId = currentTrack?.mediaStreamTrack.getSettings().deviceId;
-          const currentIndex = cameras.findIndex(c => c.deviceId === currentDeviceId);
-          const nextIndex = (currentIndex + 1) % cameras.length;
-          await localParticipant.setCameraEnabled(true, { deviceId: cameras[nextIndex].deviceId });
-        }
       }
-    } catch (error) {
-      console.error("Error switching camera:", error);
     }
   };
 
   const handleToggleScreenShare = async () => {
     try {
-      // On mobile, screen share constraints can sometimes be picky
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
       if (!isScreenShareEnabled) {
-        // Options for enabling
-        const options = isMobile ? {
-          video: {
-            displaySurface: 'monitor',
-            logicalSurface: true,
-            cursor: 'always'
-          },
-          audio: false // Audio sharing is often problematic on mobile
-        } : undefined;
-        
-        await localParticipant.setScreenShareEnabled(true, options);
+        await localParticipant.setScreenShareEnabled(true);
       } else {
         await localParticipant.setScreenShareEnabled(false);
       }
     } catch (error) {
       console.error("Screen share error:", error);
-      // If it fails on mobile, it's often due to browser restrictions or user cancellation
-      if (error.name === 'NotAllowedError') {
-        console.warn("Screen share permission denied by user");
-      }
     }
   };
 
@@ -229,10 +215,11 @@ const RoomContent = ({ onLeave, callType }) => {
       isMuted={!isMicrophoneEnabled}
       isCameraOff={!isCameraEnabled}
       isScreenSharing={isScreenShareEnabled}
+      isScreenShareSupported={isScreenShareSupported}
       onToggleMic={() => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
       onToggleCamera={callType === 'video' ? () => localParticipant.setCameraEnabled(!isCameraEnabled) : null}
       onSwitchCamera={callType === 'video' ? handleSwitchCamera : null}
-      onToggleScreenShare={callType === 'video' && isScreenShareSupported ? handleToggleScreenShare : null}
+      onToggleScreenShare={callType === 'video' ? handleToggleScreenShare : null}
       onDisconnect={onLeave}
     />
   );
