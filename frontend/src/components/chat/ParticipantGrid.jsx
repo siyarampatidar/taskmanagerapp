@@ -47,7 +47,7 @@ const ParticipantCard = ({ track, isFocused = false, onFocus, className = "", is
             <div className="pointer-events-none w-full h-full relative">
                 <VideoTrack 
                     trackRef={track} 
-                    className={`${fit === 'cover' ? 'object-cover' : 'object-contain'} w-full h-full ${isMuted ? 'opacity-0' : 'opacity-100'}`}
+                    className={`${fit === 'cover' ? 'object-cover' : 'object-contain'} w-full h-full ${isMuted ? 'opacity-0' : 'opacity-100'} ${participant.isLocal && track.source === Track.Source.Camera ? '-scale-x-100' : ''}`}
                 />
                 {isMuted && track.source === Track.Source.Camera && (
                     <CameraOffPlaceholder name={name} identity={identity} />
@@ -215,7 +215,7 @@ const FocusedParticipantContent = ({
                         <VideoTrack
                             trackRef={activeFocusTrack}
                             style={{ objectFit: 'contain' }}
-                            className={`w-full h-full ${focusMuted && activeFocusTrack.source === Track.Source.Camera ? 'opacity-0' : 'opacity-100'}`}
+                            className={`w-full h-full ${focusMuted && activeFocusTrack.source === Track.Source.Camera ? 'opacity-0' : 'opacity-100'} ${activeFocusTrack.participant.isLocal && activeFocusTrack.source === Track.Source.Camera ? '-scale-x-100' : ''}`}
                         />
                         {focusMuted && activeFocusTrack.source === Track.Source.Camera && (
                             <CameraOffPlaceholder 
